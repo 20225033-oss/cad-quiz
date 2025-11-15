@@ -527,11 +527,12 @@ app.get("/get-questions/:year", async (req, res) => {
 });
 
 
+// 起動（ローカル用）
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`サーバーが http://localhost:${PORT} で起動しました`);
+  });
+}
 
-
-
-
-// 🚀 起動
-app.listen(PORT, () => {
-  console.log(`✅ サーバーが http://localhost:${PORT} で起動しました`);
-});
+// Vercel 用エクスポート
+export default app;
