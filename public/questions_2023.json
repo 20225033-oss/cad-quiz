@@ -1,0 +1,16 @@
+[
+  {
+    "question": "CADとは何の略？",
+    "choices": ["A", "B", "Computer-Aided Design", "D"],
+    "answer": 2,
+    "category": "3次元CADの概念",
+    "explanation": "CADはComputer-Aided Designの略です。"
+  },
+  {
+    "question": "STL形式は何に使われる？",
+    "choices": ["レンダリング", "3Dプリント", "VR", "アニメーション"],
+    "answer": 1,
+    "category": "3次元CADデータの管理と周辺知識",
+    "explanation": "STL形式は3Dプリンタ用ファイル形式です。"
+  }
+]

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>スコア履歴</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #aaa; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h1>スコア履歴</h1>
+
+  <div id="userStats" style="margin-bottom: 15px; font-weight: bold;">
+  統計情報を読み込み中...
+</div>
+
+
+  <p>ログイン中: <span id="usernameDisplay"></span></p>
+  <button onclick="logout()">ログアウト</button>
+  <button onclick="location.href='index.html'">クイズへ戻る</button>
+
+  <table id="scoreTable">
+    <thead>
+      <tr>
+        <th>日付</th>
+        <th>スコア</th>
+        <th>全問題数</th>
+        <th>正答率</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    // ログイン確認
+    const username = sessionStorage.getItem("username");
+    if (!username) {
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("usernameDisplay").textContent = username;
+
+    // ログアウト処理
+    function logout() {
+      sessionStorage.removeItem("username");
+      window.location.href = "login.html";
+    }
+
+    // ユーザーのスコアを取得
+    fetch(`/get-scores/${username}`)
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector("#scoreTable tbody");
+
+        if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4">スコア履歴がありません。</td></tr>`;
+          return;
+        }
+
+        data.forEach(score => {
+          const percent = ((score.score / score.total) * 100).toFixed(1);
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${new Date(score.date).toLocaleString()}</td>
+            <td>${score.score}</td>
+            <td>${score.total}</td>
+            <td>${percent}%</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => {
+        console.error("⚠️ スコア取得エラー:", err);
+      });
+    // 📊 ユーザー統計データを取得
+    fetch(`/get-user-stats/${username}`) 
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTPエラー: ${res.status}`);
+        return res.json();
+      })
+      .then(stats => {
+        console.log("📊 統計データ:", stats); // ← デバッグ出力追加
+        const statsDiv = document.getElementById("userStats");
+        statsDiv.innerHTML = `
+          平均正答率：${stats.avgPercent}%　
+          最高正答率：${stats.maxPercent}%　
+          受験回数：${stats.attempts}回
+        `;
+      })
+      .catch(err => {
+        console.error("⚠️ 統計取得エラー:", err);
+        document.getElementById("userStats").textContent = "統計情報の取得に失敗しました。";
+      });
+
+
+  </script>
+</body>
+</html>

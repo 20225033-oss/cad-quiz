@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>利用履歴一覧（管理者）</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #aaa; padding: 8px; text-align: center; }
+    th { background-color: #e8fff1; }
+    h1 { border-left: 6px solid #4CAF50; padding-left: 10px; }
+    button { background: #4CAF50; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #43a047; }
+  </style>
+</head>
+<body>
+
+<h1>🕒 利用履歴一覧</h1>
+<button onclick="location.href='index.html'">← 戻る</button>
+
+<table id="loginTable">
+  <thead>
+    <tr>
+      <th>ユーザー名</th>
+      <th>ログイン時刻</th>
+      <th>ログアウト時刻</th>
+      <th>利用時間（分）</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  async function loadLoginData() {
+    const res = await fetch("/get-login-times");
+    const data = await res.json();
+    const tbody = document.querySelector("#loginTable tbody");
+    tbody.innerHTML = "";
+
+    data.forEach(log => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${log.username}</td>
+        <td>${log.login_time ?? "-"}</td>
+        <td>${log.logout_time ?? "-"}</td>
+        <td>${log.duration_minutes ?? "-"}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  loadLoginData();
+</script>
+
+</body>
+</html>

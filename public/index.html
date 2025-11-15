@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>CAD 試験対策クイズ</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- ✅ モジュール型のスクリプト読み込みに変更 -->
+  <script type="module" src="js/index-main.js"></script>
+</head>
+<body>
+  <h1>CAD 試験対策クイズ</h1>
+
+  <!-- 📊 ナビゲーションボタン -->
+  <div style="margin-bottom: 10px;">
+    <button onclick="location.href='scores.html'">スコア履歴を見る</button>
+    <button id="adminButton" style="margin-left: 10px;">管理者ページ</button>
+    <button id="loginTimeButton" style="margin-left: 10px;">ログイン履歴を見る</button>
+  </div>
+
+  <!-- 👤 ユーザー情報 -->
+  <div style="margin-bottom: 10px;">
+    <p>ログイン中: <span id="usernameDisplay"></span></p>
+    <button id="logoutButton">ログアウト</button>
+  </div>
+
+  <hr>
+
+  <!-- 🎯 クイズ選択 -->
+  <label for="yearSelect">年度を選んでください:</label>
+  <select id="yearSelect">
+  <option value="201601">2016年度（前期）</option>
+  <option value="201602">2016年度（後期）</option>
+  <option value="201701">2017年度（前期）</option>
+  <option value="201702">2017年度（後期）</option>
+  <option value="2023">2023年度</option>
+  <option value="2024">2024年度</option>
+</select>
+
+
+  <button id="startButton">クイズ開始</button>
+  <button id="retryWrong">間違えた問題をやり直す</button>
+
+  <hr>
+
+  <!-- ⏱️ タイマー -->
+  <div id="timer" style="font-weight: bold; font-size: 1.2em; color: red;"></div>
+
+  <!-- 🧩 クイズエリア -->
+  <div id="quizArea" style="display: none;"></div>
+
+  <!-- 🎓 結果表示エリア -->
+  <div id="resultArea" style="margin-top: 20px;"></div>
+
+  <script>
+  // === ユーザー情報とアクセス制御 ===
+  const username = sessionStorage.getItem("username");
+  const isAdmin = sessionStorage.getItem("isAdmin");
+
+  if (!username) {
+    window.location.href = "login.html";
+  }
+
+  // ✅ ログアウト時にログアウト時刻を記録
+  document.getElementById("logoutButton").addEventListener("click", async () => {
+    const username = sessionStorage.getItem("username");
+
+    await fetch("/record-logout-time", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, logoutTime: new Date().toISOString() })
+    });
+
+    sessionStorage.clear();
+    window.location.href = "/login.html";
+  });
+
+  // ✅ ユーザー名表示
+  document.getElementById("usernameDisplay").textContent = username;
+
+  // ✅ 管理者限定ボタン
+  const adminButton = document.getElementById("adminButton");
+  const loginTimeButton = document.getElementById("loginTimeButton");
+
+  if (isAdmin === "true") {
+    adminButton.onclick = () => window.location.href = "admin-scores.html";
+    loginTimeButton.onclick = () => window.location.href = "admin-login-times.html";
+
+    // ✅ ★ここで総利用時間ランキングを追加
+    const container = adminButton.parentElement;
+    const durationBtn = document.createElement("button");
+    durationBtn.textContent = "総利用時間ランキング";
+    durationBtn.style.marginLeft = "10px";
+    durationBtn.onclick = () => window.location.href = "admin-user-durations.html";
+    container.appendChild(durationBtn);
+
+  } else {
+    adminButton.style.display = "none";
+    loginTimeButton.style.display = "none";
+  }
+</script>
+
+
+</body>
+</html>

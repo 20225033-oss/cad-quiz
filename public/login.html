@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ログイン</title>
+</head>
+<body>
+
+  <h1>ログイン画面</h1>
+
+  <form id="loginForm">
+    <label for="username">ユーザー名：</label>
+    <input type="text" id="username" required><br><br>
+
+    <label for="password">パスワード：</label>
+    <input type="password" id="password" required><br><br>
+
+    <button type="submit">ログイン</button>
+  </form>
+
+  <p><a href="register.html">新規登録はこちら</a></p>
+  <p id="message" style="color: red;"></p>
+
+<script>
+  document.getElementById("loginForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    const res = await fetch("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    const result = await res.json();
+
+    if (!result.success) {
+      document.getElementById("message").textContent = result.message;
+      return;
+    }
+
+    sessionStorage.setItem("username", username);
+    sessionStorage.setItem("isAdmin", result.isAdmin ? "true" : "false");
+
+    // ✅ ログイン時刻を DB に保存（loginTime は送らない）
+    await fetch("/record-login-time", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username })
+    });
+
+    // ✅ 遷移
+    if (result.isAdmin) {
+      window.location.href = "/admin-scores.html";
+    } else {
+      window.location.href = "/index.html";
+    }
+  });
+</script>
+
+
+
+
+
+</body>
+</html>

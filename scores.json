@@ -1,0 +1,62 @@
+[
+  {
+    "username": "user1",
+    "score": 2,
+    "total": 2,
+    "date": "2025-10-20T06:16:13.934Z"
+  },
+  {
+    "username": "user1",
+    "score": 2,
+    "total": 2,
+    "date": "2025-10-20T06:16:24.462Z"
+  },
+  {
+    "username": "user1",
+    "score": 2,
+    "total": 2,
+    "date": "2025-10-20T06:28:10.095Z"
+  },
+  {
+    "username": "user1",
+    "score": 2,
+    "total": 2,
+    "date": "2025-10-20T06:29:02.581Z"
+  },
+  {
+    "username": "user1",
+    "score": 1,
+    "total": 2,
+    "date": "2025-10-20T09:43:41.412Z"
+  },
+  {
+    "username": "user2",
+    "score": 0,
+    "total": 2,
+    "date": "2025-10-22T22:27:26.244Z"
+  },
+  {
+    "username": "user2",
+    "score": 0,
+    "total": 2,
+    "date": "2025-10-22T22:27:39.972Z"
+  },
+  {
+    "username": "user1",
+    "score": 0,
+    "total": 2,
+    "date": "2025-10-24T05:14:27.525Z"
+  },
+  {
+    "username": "user1",
+    "score": 1,
+    "total": 2,
+    "date": "2025-10-27T05:10:56.171Z"
+  },
+  {
+    "username": "user1",
+    "score": 1,
+    "total": 1,
+    "date": "2025-10-27T05:11:05.234Z"
+  }
+]

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>総利用時間ランキング（管理者）</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #aaa; padding: 8px; text-align: center; }
+    th { background-color: #eaf4ff; }
+    h1 { border-left: 6px solid #2196F3; padding-left: 10px; }
+    button { background: #2196F3; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #1e88e5; }
+  </style>
+</head>
+<body>
+
+<h1>⏱️ ユーザー別 総利用時間</h1>
+<button onclick="location.href='index.html'">← 戻る</button>
+
+<table id="durationTable">
+  <thead>
+    <tr>
+      <th>順位</th>
+      <th>ユーザー名</th>
+      <th>総利用時間（分）</th>
+      <th>総利用時間（時間換算）</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  async function loadDurations() {
+    const res = await fetch("/get-login-times");
+    const logs = await res.json();
+
+    // 🔥 合計時間をユーザーごとに集計
+    const totals = {};
+    logs.forEach(row => {
+      if (!row.duration_minutes || !row.username) return;
+      if (!totals[row.username]) totals[row.username] = 0;
+      totals[row.username] += row.duration_minutes;
+    });
+
+    // 🔥 配列にし、降順にソート
+    const sorted = Object.entries(totals)
+      .map(([username, minutes]) => ({
+        username,
+        minutes,
+        hours: (minutes / 60).toFixed(1)
+      }))
+      .sort((a, b) => b.minutes - a.minutes);
+
+    const tbody = document.querySelector("#durationTable tbody");
+    tbody.innerHTML = "";
+
+    sorted.forEach((u, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${u.username}</td>
+        <td>${u.minutes}</td>
+        <td>${u.hours}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  loadDurations();
+</script>
+
+</body>
+</html>
+
