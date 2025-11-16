@@ -1,12 +1,12 @@
 {
-  "version": 2,
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs18.x"
-    }
+  "name": "cad-quiz",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node api/index.js"
   },
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/(.*)", "destination": "/public/$1" }
-  ]
+  "dependencies": {
+    "mysql2": "^3.0.0",
+    "dotenv": "^16.3.0"
+  }
 }
