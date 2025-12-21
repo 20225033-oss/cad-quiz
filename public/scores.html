@@ -3,99 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <title>スコア履歴</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- スコア履歴JS -->
+  <script type="module" src="js/scores.js"></script>
+
   <style>
-    body { font-family: "Segoe UI", sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-    th, td { border: 1px solid #aaa; padding: 8px; text-align: center; }
-    th { background-color: #f2f2f2; }
+    .filter-area {
+      margin-bottom: 20px;
+    }
+    .filter-select {
+      padding: 6px 10px;
+      font-size: 1rem;
+    }
+
+    .tab-buttons {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .tab-buttons button {
+      padding: 10px 14px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    .score-list {
+      margin-top: 20px;
+    }
+    .score-item {
+      border-bottom: 1px solid #ddd;
+      padding: 8px 0;
+    }
   </style>
 </head>
 <body>
-  <h1>スコア履歴</h1>
 
-  <div id="userStats" style="margin-bottom: 15px; font-weight: bold;">
-  統計情報を読み込み中...
+<h1>スコア履歴</h1>
+
+<div style="margin-bottom: 10px;">
+  <button onclick="location.href='index.html'">ホームに戻る</button>
 </div>
 
+<!-- フィルター -->
+<div class="filter-area">
+  <label><strong>年度で絞り込み：</strong></label>
+  <select id="yearFilter" class="filter-select"></select>
+</div>
 
-  <p>ログイン中: <span id="usernameDisplay"></span></p>
-  <button onclick="logout()">ログアウト</button>
-  <button onclick="location.href='index.html'">クイズへ戻る</button>
+<!-- タブ -->
+<div class="tab-buttons">
+  <button data-tab="tab1">スコア推移</button>
+  <button data-tab="tab2">合格率</button>
+  <button data-tab="tab3">分野別正答数</button>
+  <button data-tab="tab4">難問分析（Top10）</button>
+</div>
 
-  <table id="scoreTable">
-    <thead>
-      <tr>
-        <th>日付</th>
-        <th>スコア</th>
-        <th>全問題数</th>
-        <th>正答率</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<!-- タブ内容 -->
+<div id="tab1" class="tab-content active">
+  <canvas id="lineChart"></canvas>
+</div>
 
-  <script>
-    // ログイン確認
-    const username = sessionStorage.getItem("username");
-    if (!username) {
-      window.location.href = "login.html";
-    }
+<div id="tab2" class="tab-content">
+  <canvas id="pieChart"></canvas>
+</div>
 
-    document.getElementById("usernameDisplay").textContent = username;
+<div id="tab3" class="tab-content">
+  <canvas id="barChart"></canvas>
+</div>
 
-    // ログアウト処理
-    function logout() {
-      sessionStorage.removeItem("username");
-      window.location.href = "login.html";
-    }
+<div id="tab4" class="tab-content">
+  <canvas id="hardChart"></canvas>
+</div>
 
-    // ユーザーのスコアを取得
-    fetch(`/get-scores/${username}`)
-      .then(res => res.json())
-      .then(data => {
-        const tbody = document.querySelector("#scoreTable tbody");
+<!-- 履歴一覧 -->
+<h2>履歴一覧</h2>
+<div id="scoreList" class="score-list"></div>
 
-        if (data.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="4">スコア履歴がありません。</td></tr>`;
-          return;
-        }
-
-        data.forEach(score => {
-          const percent = ((score.score / score.total) * 100).toFixed(1);
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${new Date(score.date).toLocaleString()}</td>
-            <td>${score.score}</td>
-            <td>${score.total}</td>
-            <td>${percent}%</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      })
-      .catch(err => {
-        console.error("⚠️ スコア取得エラー:", err);
-      });
-    // 📊 ユーザー統計データを取得
-    fetch(`/get-user-stats/${username}`) 
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTPエラー: ${res.status}`);
-        return res.json();
-      })
-      .then(stats => {
-        console.log("📊 統計データ:", stats); // ← デバッグ出力追加
-        const statsDiv = document.getElementById("userStats");
-        statsDiv.innerHTML = `
-          平均正答率：${stats.avgPercent}%　
-          最高正答率：${stats.maxPercent}%　
-          受験回数：${stats.attempts}回
-        `;
-      })
-      .catch(err => {
-        console.error("⚠️ 統計取得エラー:", err);
-        document.getElementById("userStats").textContent = "統計情報の取得に失敗しました。";
-      });
-
-
-  </script>
 </body>
 </html>

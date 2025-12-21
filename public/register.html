@@ -6,41 +6,46 @@
 </head>
 <body>
   <h1>新規ユーザー登録</h1>
+
   <form id="registerForm">
     <label for="username">ユーザー名：</label>
     <input type="text" id="username" required><br><br>
+
     <label for="password">パスワード：</label>
     <input type="password" id="password" required><br><br>
+
     <button type="submit">登録</button>
   </form>
 
   <p id="message" style="color:red;"></p>
   <p><a href="login.html">ログイン画面へ戻る</a></p>
 
-  <script>
-    document.getElementById("registerForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
+<script>
+  document.getElementById("registerForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
 
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
 
-      const res = await fetch("/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-      });
-
-      const result = await res.json();
-      const msg = document.getElementById("message");
-
-      if (result.success) {
-        msg.style.color = "green";
-        msg.textContent = result.message;
-      } else {
-        msg.style.color = "red";
-        msg.textContent = result.message;
-      }
+    // ✅ 必ず /api/register を呼び出す
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
     });
-  </script>
+
+    const result = await res.json();
+    const msg = document.getElementById("message");
+
+    if (result.error) {
+      msg.style.color = "red";
+      msg.textContent = result.error;
+    } else {
+      msg.style.color = "green";
+      msg.textContent = result.message;
+    }
+  });
+</script>
+
 </body>
 </html>

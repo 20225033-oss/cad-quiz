@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>CAD 試験対策クイズ - 解答ページ</title>
+
+  <!-- 共通CSS -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- クイズJS -->
+  <script type="module" src="js/quiz-page-main.js"></script>
+
+  <style>
+  /* ============================
+     UI 改良（アコーディオン）
+  ============================ */
+  .big-question {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    background: #fafafa;
+    overflow: hidden;
+  }
+
+  .big-header {
+    width: 100%;
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: bold;
+    font-size: 1rem;
+    background: #eee;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* 初期は閉じている */
+  .big-body {
+    display: none;
+  }
+
+  .big-question.open .big-body {
+    display: block;
+  }
+
+  /* ============================
+     9択問題用 3×3 グリッド
+  ============================ */
+  .choices-grid-9 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 16px;
+    row-gap: 4px;
+  }
+
+  /* ============================
+     問題ブロック
+  ============================ */
+  .question-block {
+    padding: 12px 16px;
+    border-top: 1px solid #ddd;
+    background: #fff;
+  }
+
+  .question-title {
+    margin-top: 0;
+    margin-bottom: 4px;
+  }
+
+  .question-text {
+    margin: 6px 0 8px;
+  }
+
+  /* ============================
+     選択肢
+  ============================ */
+  .choice-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 2px 0;
+  }
+
+  .choice-row input[type="radio"] {
+    transform: scale(1.2);
+    margin-top: 2px;
+  }
+
+  /* ============================
+     長文（大問6〜9）
+  ============================ */
+  .reading-passage {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 4px solid #aaa;
+    background: #fdfdfd;
+    font-size: 0.95rem;
+    line-height: 1.5em;
+  }
+
+  /* ============================
+     画像クリックで拡大
+  ============================ */
+  .question-image {
+    cursor: zoom-in;
+  }
+
+  /* ライトボックス */
+  #imageLightbox {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.75);
+    z-index: 9999;
+  }
+
+  #imageLightbox.show {
+    display: flex;
+  }
+
+  #imageLightbox img {
+    max-width: 92vw;
+    max-height: 92vh;
+    background: #fff;
+    cursor: grab;
+    border-radius: 8px;
+  }
+  </style>
+</head>
+<body>
+  <h1>CAD 試験対策クイズ - 解答ページ</h1>
+
+  <!-- ナビ -->
+  <div style="margin-bottom: 10px;">
+    <button onclick="location.href='index.html'">ホームに戻る</button>
+    <button onclick="location.href='scores.html'">スコア履歴を見る</button>
+  </div>
+
+  <!-- タイマー -->
+  <div id="timer"
+      style="font-weight: bold; font-size: 1.2em; color: red; margin-bottom: 10px;">
+  </div>
+
+  <!-- クイズ本体 -->
+  <div id="quizArea"></div>
+
+  <!-- 採点結果 -->
+  <div id="resultArea" style="margin-top: 20px;"></div>
+
+  <script>
+    // ログイン未確認ならログイン画面へ
+    const username = sessionStorage.getItem("username");
+    if (!username) {
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <!-- 画像拡大ライトボックス -->
+  <div id="imageLightbox">
+    <img id="imageLightboxImg" alt="拡大画像">
+  </div>
+
+</body>
+</html>

@@ -1,232 +1,282 @@
-// api/index.js
-import { query } from "../db.js";
-import { hashPassword, verifyPassword, parseJsonBody } from "../utils.js";
+export const config = {
+  runtime: "nodejs",
+};
 
-// JSON ボディ取得（Vercel 対策）
-async function readBody(req) {
-  return await parseJsonBody(req);
-}
-
-function json(res, status, data) {
-  res.status(status).json(data);
-}
+import { query } from "./db.js";
+import { send, parseJsonBody } from "./utils.js";
 
 export default async function handler(req, res) {
-  const { method } = req;
-  const url = req.url || "";
-  const body = await readBody(req);
+  const method = req.method;
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const pathname = url.pathname;
+
+  // =====================
+  // スコア保存
+  // =====================
+  if (pathname === "/api/save-score" && method === "POST") {
+    let body;
+    try {
+      body = await parseJsonBody(req);
+    } catch {
+      return send(res, 400, { error: "Invalid JSON" });
+    }
+
+    try {
+      await query(
+        `
+        INSERT INTO scores
+        (user_id, year_id, score, total, percent,
+         correct_cat1, total_cat1,
+         correct_cat2, total_cat2,
+         correct_cat3, total_cat3,
+         correct_cat4, total_cat4,
+         pass)
+        VALUES
+        ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+        `,
+        [
+          body.user_id,
+          body.year_id,
+          body.score,
+          body.total,
+          body.percent,
+          body.correct_cat1,
+          body.total_cat1,
+          body.correct_cat2,
+          body.total_cat2,
+          body.correct_cat3,
+          body.total_cat3,
+          body.correct_cat4,
+          body.total_cat4,
+          body.pass,
+        ]
+      );
+
+      return send(res, 200, { message: "Score saved" });
+    } catch (e) {
+      console.error("save-score error:", e);
+      return send(res, 500, { error: "failed to save score" });
+    }
+  }
+
+  // =====================
+  // スコア取得
+  // =====================
+  if (pathname === "/api/get-scores" && method === "GET") {
+    const userId = url.searchParams.get("user_id");
+
+    if (!userId) {
+      return send(res, 400, { error: "user_id required" });
+    }
+
+    try {
+      const { rows } = await query(
+        `
+        SELECT
+          id, user_id, year_id, score, total, percent,
+          correct_cat1, total_cat1,
+          correct_cat2, total_cat2,
+          correct_cat3, total_cat3,
+          correct_cat4, total_cat4,
+          pass, created_at
+        FROM scores
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+        `,
+        [Number(userId)]
+      );
+
+      return send(res, 200, { scores: rows });
+    } catch (e) {
+      console.error("get-scores error:", e);
+      return send(res, 500, { error: "failed to get scores" });
+    }
+  }
+
+// =====================
+// ログイン
+// =====================
+if (pathname === "/api/login" && method === "POST") {
+  let body;
+  try {
+    body = await parseJsonBody(req);
+  } catch {
+    return send(res, 400, { error: "Invalid JSON" });
+  }
+
+  const { username, password } = body;
+
+  if (!username || !password) {
+    return send(res, 400, { error: "username and password required" });
+  }
 
   try {
-    // ======================================================
-    //  GET QUESTIONS
-    // ======================================================
-    if (url.startsWith("/get-questions")) {
-      if (method !== "GET")
-        return json(res, 405, { error: "Method Not Allowed" });
+    const { rows } = await query(
+      `
+      SELECT id, username, password, is_admin
+      FROM users
+      WHERE username = $1
+      `,
+      [username]
+    );
 
-      const year = new URL(req.url, "http://localhost").searchParams.get("year");
-      if (!year) return json(res, 400, { error: "year is required" });
-
-      const result = await query(
-        "SELECT * FROM questions WHERE year_id = $1 ORDER BY question_number ASC",
-        [year]
-      );
-
-      return json(res, 200, { questions: result.rows });
+    if (rows.length === 0) {
+      return send(res, 401, { error: "login failed" });
     }
 
-    // ======================================================
-    //  GET USERS
-    // ======================================================
-    if (url.startsWith("/get-users")) {
-      const result = await query(
-        "SELECT id, username, is_active, is_admin FROM users ORDER BY id ASC"
-      );
-      return json(res, 200, result.rows);
+    const user = rows[0];
+
+    // utils.js の verifyPassword を使う
+    const { verifyPassword } = await import("./utils.js");
+
+    if (!verifyPassword(password, user.password)) {
+      return send(res, 401, { error: "login failed" });
     }
 
-    // ======================================================
-    //  REGISTER
-    // ======================================================
-    if (url.startsWith("/register") && method === "POST") {
-      const { username, password } = body;
-
-      if (!username || !password)
-        return json(res, 400, { error: "Missing username or password" });
-
-      const hashed = hashPassword(password);
-
-      await query(
-        "INSERT INTO users (username, password) VALUES ($1, $2)",
-        [username, hashed]
-      );
-
-      return json(res, 200, { message: "Registered!" });
-    }
-
-    // ======================================================
-    //  LOGIN
-    // ======================================================
-    if (url.startsWith("/login") && method === "POST") {
-      const { username, password } = body;
-
-      const result = await query(
-        "SELECT * FROM users WHERE username=$1",
-        [username]
-      );
-
-      if (result.rowCount === 0)
-        return json(res, 400, { error: "User not found" });
-
-      const user = result.rows[0];
-
-      if (!verifyPassword(password, user.password))
-        return json(res, 400, { error: "Invalid password" });
-
-      return json(res, 200, {
-        message: "Login OK",
-        userId: user.id,
-        isAdmin: user.is_admin === true
-      });
-    }
-
-    // ======================================================
-    // SAVE SCORE
-    // ======================================================
-    if (url.startsWith("/save-score") && method === "POST") {
-      const { user_id, score, year_id } = body;
-
-      await query(
-        "INSERT INTO scores (user_id, score, year_id) VALUES ($1, $2, $3)",
-        [user_id, score, year_id]
-      );
-
-      return json(res, 200, { message: "Score saved" });
-    }
-
-    // ======================================================
-    // GET SCORES
-    // ======================================================
-    if (url.startsWith("/get-scores")) {
-      const user_id = new URL(req.url, "http://localhost").searchParams.get("user_id");
-
-      const result = await query(
-        "SELECT * FROM scores WHERE user_id=$1 ORDER BY id DESC",
-        [user_id]
-      );
-
-      return json(res, 200, result.rows);
-    }
-
-    // ======================================================
-    //  TOGGLE USER ACTIVE
-    // ======================================================
-    if (url.startsWith("/toggle-user") && method === "POST") {
-      const { user_id, is_active } = body;
-
-      await query(
-        "UPDATE users SET is_active=$1 WHERE id=$2",
-        [is_active, user_id]
-      );
-
-      return json(res, 200, { message: "User toggled" });
-    }
-
-    // ======================================================
-    // DELETE USER
-    // ======================================================
-    if (url.startsWith("/delete-user") && method === "POST") {
-      const { user_id } = body;
-
-      await query("DELETE FROM users WHERE id=$1", [user_id]);
-
-      return json(res, 200, { message: "User deleted" });
-    }
-
-    // ======================================================
-    // DELETE SCORE
-    // ======================================================
-    if (url.startsWith("/delete-score") && method === "POST") {
-      const { score_id } = body;
-
-      await query("DELETE FROM scores WHERE id=$1", [score_id]);
-
-      return json(res, 200, { message: "Score deleted" });
-    }
-
-    // ======================================================
-    // GET ALL SCORES
-    // ======================================================
-    if (url.startsWith("/get-all-scores")) {
-      const result = await query("SELECT * FROM scores ORDER BY id DESC");
-      return json(res, 200, result.rows);
-    }
-
-    // ======================================================
-    // GET USER STATS
-    // ======================================================
-    if (url.startsWith("/get-all-user-stats")) {
-      const result = await query(`
-        SELECT u.id, u.username, COUNT(s.id) AS play_count, AVG(s.score) AS avg_score
-        FROM users u
-        LEFT JOIN scores s ON u.id = s.user_id
-        GROUP BY u.id
-        ORDER BY u.id
-      `);
-
-      return json(res, 200, result.rows);
-    }
-
-    // ======================================================
-    // RECORD LOGIN TIME
-    // ======================================================
-    if (url.startsWith("/record-login-time") && method === "POST") {
-      const { user_id } = body;
-
-      await query(
-        "INSERT INTO login_times (user_id, login_time) VALUES ($1, NOW())",
-        [user_id]
-      );
-
-      return json(res, 200, { message: "Login time recorded" });
-    }
-
-    // ======================================================
-    // RECORD LOGOUT TIME
-    // ======================================================
-    if (url.startsWith("/record-logout-time") && method === "POST") {
-      const { user_id } = body;
-
-      await query(
-        "UPDATE login_times SET logout_time = NOW() WHERE user_id=$1 ORDER BY id DESC LIMIT 1",
-        [user_id]
-      );
-
-      return json(res, 200, { message: "Logout time recorded" });
-    }
-
-    // ======================================================
-    // GET LOGIN TIMES
-    // ======================================================
-    if (url.startsWith("/get-login-times")) {
-      const result = await query(`
-        SELECT u.username, l.login_time, l.logout_time
-        FROM login_times l
-        JOIN users u ON u.id = l.user_id
-        ORDER BY l.login_time DESC
-      `);
-
-      return json(res, 200, result.rows);
-    }
-
-    // NOT FOUND
-    return json(res, 404, { error: "API Not Found" });
-
-  } catch (err) {
-    console.error(err);
-    return json(res, 500, {
-      error: "Server Error",
-      detail: err.message
+    return send(res, 200, {
+      userId: user.id,
+      username: user.username,
+      isAdmin: user.is_admin,
     });
+  } catch (e) {
+    console.error("login error:", e);
+    return send(res, 500, { error: "login failed" });
   }
 }
+
+// ===============================
+// 管理者：ユーザー一覧
+// ===============================
+if (pathname === "/api/get-users" && method === "GET") {
+  try {
+    const { rows } = await query(
+      "SELECT id, username FROM users ORDER BY id"
+    );
+    return send(res, 200, rows);
+  } catch (err) {
+    console.error("get-users error:", err);
+    return send(res, 500, { error: "get-users failed" });
+  }
+}
+
+
+// ===============================
+// 管理者：全スコア
+// ===============================
+if (pathname === "/api/get-all-scores" && method === "GET") {
+  try {
+    const { rows } = await query(`
+      SELECT s.*, u.username
+      FROM scores s
+      JOIN users u ON s.user_id = u.id
+      ORDER BY s.created_at DESC
+    `);
+    return send(res, 200, rows);
+  } catch (err) {
+    console.error("get-all-scores error:", err);
+    return send(res, 500, { error: "get-all-scores failed" });
+  }
+}
+
+
+// ===============================
+// 管理者：ログイン履歴
+// ===============================
+if (pathname === "/api/get-login-times" && method === "GET") {
+  try {
+    const { rows } = await query(`
+      SELECT username, MAX(login_time) AS last_login
+      FROM login_times
+      GROUP BY username
+    `);
+    return send(res, 200, rows);
+  } catch (err) {
+    console.error("get-login-times error:", err);
+    return send(res, 500, { error: "get-login-times failed" });
+  }
+}
+
+// =====================
+// ユーザー登録（管理者用）
+// =====================
+if (pathname === "/api/register" && method === "POST") {
+  let body;
+  try {
+    body = await parseJsonBody(req);
+  } catch {
+    return send(res, 400, { error: "Invalid JSON" });
+  }
+
+  const { username, password } = body;
+
+  if (!username || !password) {
+    return send(res, 400, { error: "username and password required" });
+  }
+
+  try {
+    // パスワードをSHA256でハッシュ
+    const crypto = await import("crypto");
+    const hashed = crypto.createHash("sha256").update(password).digest("hex");
+
+    await query(
+      `
+      INSERT INTO users (username, password, active, is_admin)
+      VALUES ($1, $2, TRUE, FALSE)
+      `,
+      [username, hashed]
+    );
+
+    return send(res, 200, { message: "user created" });
+  } catch (e) {
+    console.error("register error:", e);
+    return send(res, 500, { error: "register failed" });
+  }
+}
+
+
+
+
+  // =====================
+  // 問題取得
+  // =====================
+  if (pathname === "/api/get-questions" && method === "GET") {
+    const year = url.searchParams.get("year");
+
+    if (!year) {
+      return send(res, 400, { error: "year required" });
+    }
+
+    try {
+      const { rows } = await query(
+        `
+        SELECT
+          id,
+          year_id,
+          question_number,
+          group_id,
+          category,
+          shuffle_allowed,
+          question_text,
+          choice1, choice2, choice3, choice4,
+          choice5, choice6, choice7, choice8, choice9,
+          correct_choice,
+          explanation,
+          image_path
+        FROM questions
+        WHERE year_id = $1
+        ORDER BY question_number
+        `,
+        [Number(year)]
+      );
+
+      return send(res, 200, { questions: rows });
+    } catch (e) {
+      console.error("get-questions error:", e);
+      return send(res, 500, { error: "failed to get questions" });
+    }
+  }
+
+  return send(res, 404, { error: "NOT_FOUND" });
+}
+
+

@@ -1,3 +1,4 @@
+// public/js/setTimer.js
 // ===============================
 // タイマー機能（startTimer / stopTimer）
 // ===============================
@@ -5,7 +6,9 @@
 let timerId = null;
 let remainingSeconds = 0;
 
-// ⏱ タイマー開始（limitSeconds: 制限時間 秒）
+// ⏱ タイマー開始
+// callback: 時間切れ時に実行する関数
+// limitSeconds: 制限時間（秒）
 export function startTimer(callback, limitSeconds = 600) {
   stopTimer(); // 既存タイマー停止
   remainingSeconds = limitSeconds;
@@ -18,8 +21,10 @@ export function startTimer(callback, limitSeconds = 600) {
 
     if (remainingSeconds <= 0) {
       stopTimer();
-      alert("時間になりました。結果を表示します。");
-      callback(); // 自動採点
+      if (typeof callback === "function") {
+        alert("時間切れです！自動的に解答を送信します。");
+        callback();
+      }
     }
   }, 1000);
 }

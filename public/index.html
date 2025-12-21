@@ -2,103 +2,108 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>CAD 試験対策クイズ</title>
+  <title>CAD 試験対策クイズ - ホーム</title>
   <link rel="stylesheet" href="style.css">
-
-  <!-- ✅ モジュール型のスクリプト読み込みに変更 -->
   <script type="module" src="js/index-main.js"></script>
+
+  <style>
+    .year-box {
+      border: 1px solid #d0e2ff;
+      background: #f7fbff;
+      padding: 12px;
+      border-radius: 8px;
+      width: 260px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    .year-box:hover { background: #eef7ff; }
+    .year-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
+
 <body>
   <h1>CAD 試験対策クイズ</h1>
 
-  <!-- 📊 ナビゲーションボタン -->
-  <div style="margin-bottom: 10px;">
+  <div>
     <button onclick="location.href='scores.html'">スコア履歴を見る</button>
-    <button id="adminButton" style="margin-left: 10px;">管理者ページ</button>
-    <button id="loginTimeButton" style="margin-left: 10px;">ログイン履歴を見る</button>
+    <button id="loginTimeButton">ログイン履歴</button>
   </div>
 
-  <!-- 👤 ユーザー情報 -->
-  <div style="margin-bottom: 10px;">
-    <p>ログイン中: <span id="usernameDisplay"></span></p>
-    <button id="logoutButton">ログアウト</button>
-  </div>
+  <p>ログイン中: <span id="usernameDisplay"></span></p>
+  <button id="logoutButton">ログアウト</button>
+  <button id="adminBtn" style="display:none;">
+  管理者画面へ
+  </button>
+
 
   <hr>
 
-  <!-- 🎯 クイズ選択 -->
-  <label for="yearSelect">年度を選んでください:</label>
-  <select id="yearSelect">
-  <option value="201601">2016年度（前期）</option>
-  <option value="201602">2016年度（後期）</option>
-  <option value="201701">2017年度（前期）</option>
-  <option value="201702">2017年度（後期）</option>
-  <option value="2023">2023年度</option>
-  <option value="2024">2024年度</option>
-</select>
+  <h2>年度別クイズを選ぶ</h2>
 
+  <!-- チェックボックス式 年度UI -->
+  <div class="year-grid">
 
-  <button id="startButton">クイズ開始</button>
+    <label class="year-box">
+      <input type="checkbox" class="year-check" value="201601"> 2016年度（前期）
+    </label>
+
+    <label class="year-box">
+      <input type="checkbox" class="year-check" value="201602"> 2016年度（後期）
+    </label>
+
+    <label class="year-box">
+      <input type="checkbox" class="year-check" value="201701"> 2017年度（前期）
+    </label>
+
+    <label class="year-box">
+      <input type="checkbox" class="year-check" value="201702"> 2017年度（後期）
+    </label>
+
+    <label class="year-box">
+      <input type="checkbox" class="year-check" value="201801"> 2018年度（前期）
+    </label>
+
+    <label class="year-box">
+      <input type="checkbox" class="year-check" value="201802"> 2018年度（後期）
+    </label>
+
+    <label class="year-box">
+      <input type="checkbox" class="year-check" value="201901"> 2019年度（前期）
+    </label>
+
+    <label class="year-box">
+      <input type="checkbox" class="year-check" value="201902"> 2019年度（後期）
+    </label>
+
+    <label class="year-box">
+      <input type="checkbox" class="year-check" value="202001"> 2020年度（前期）
+    </label>
+
+    <label class="year-box">
+      <input type="checkbox" class="year-check" value="202002"> 2020年度（後期）
+    </label>
+
+    </label>
+
+  </div>
+
+  <button id="startRandom" style="margin-top: 15px;">選んだ年度からランダム出題する</button>
+
+  <br><br>
+
   <button id="retryWrong">間違えた問題をやり直す</button>
 
-  <hr>
-
-  <!-- ⏱️ タイマー -->
-  <div id="timer" style="font-weight: bold; font-size: 1.2em; color: red;"></div>
-
-  <!-- 🧩 クイズエリア -->
-  <div id="quizArea" style="display: none;"></div>
-
-  <!-- 🎓 結果表示エリア -->
-  <div id="resultArea" style="margin-top: 20px;"></div>
-
+  <!-- ログインチェック（保険） -->
   <script>
-  // === ユーザー情報とアクセス制御 ===
-  const username = sessionStorage.getItem("username");
-  const isAdmin = sessionStorage.getItem("isAdmin");
-
-  if (!username) {
-    window.location.href = "login.html";
-  }
-
-  // ✅ ログアウト時にログアウト時刻を記録
-  document.getElementById("logoutButton").addEventListener("click", async () => {
-    const username = sessionStorage.getItem("username");
-
-    await fetch("/record-logout-time", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, logoutTime: new Date().toISOString() })
-    });
-
-    sessionStorage.clear();
-    window.location.href = "/login.html";
-  });
-
-  // ✅ ユーザー名表示
-  document.getElementById("usernameDisplay").textContent = username;
-
-  // ✅ 管理者限定ボタン
-  const adminButton = document.getElementById("adminButton");
-  const loginTimeButton = document.getElementById("loginTimeButton");
-
-  if (isAdmin === "true") {
-    adminButton.onclick = () => window.location.href = "admin-scores.html";
-    loginTimeButton.onclick = () => window.location.href = "admin-login-times.html";
-
-    // ✅ ★ここで総利用時間ランキングを追加
-    const container = adminButton.parentElement;
-    const durationBtn = document.createElement("button");
-    durationBtn.textContent = "総利用時間ランキング";
-    durationBtn.style.marginLeft = "10px";
-    durationBtn.onclick = () => window.location.href = "admin-user-durations.html";
-    container.appendChild(durationBtn);
-
-  } else {
-    adminButton.style.display = "none";
-    loginTimeButton.style.display = "none";
-  }
-</script>
+    if (!sessionStorage.getItem("username")) {
+      location.href = "login.html";
+    }
+  </script>
 
 
 </body>

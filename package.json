@@ -1,12 +1,8 @@
 {
   "name": "cad-quiz",
   "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "start": "node api/index.js"
-  },
+  "type": "module",
   "dependencies": {
-    "mysql2": "^3.0.0",
-    "dotenv": "^16.3.0"
+    "pg": "^8.11.0"
   }
 }

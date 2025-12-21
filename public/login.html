@@ -18,51 +18,46 @@
     <button type="submit">ログイン</button>
   </form>
 
-  <p><a href="register.html">新規登録はこちら</a></p>
-  <p id="message" style="color: red;"></p>
+  <!--<p><a href="register.html">新規登録はこちら</a></p>
+  <p id="message" style="color: red;"></p>-->
+<p id="message" style="color: red;"></p>
+
 
 <script>
-  document.getElementById("loginForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
+document.getElementById("loginForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
 
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
 
-    const res = await fetch("/login", {
+  let result;
+
+  try {
+    const res = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password })
     });
 
-    const result = await res.json();
+    result = await res.json();
+  } catch (err) {
+    document.getElementById("message").textContent = "通信エラー";
+    return;
+  }
 
-    if (!result.success) {
-      document.getElementById("message").textContent = result.message;
-      return;
-    }
+  if (result.error) {
+    document.getElementById("message").textContent = result.error;
+    return;
+  }
 
-    sessionStorage.setItem("username", username);
-    sessionStorage.setItem("isAdmin", result.isAdmin ? "true" : "false");
+sessionStorage.setItem("username", result.username);
+sessionStorage.setItem("userId", result.userId);
+sessionStorage.setItem("isAdmin", result.isAdmin ? "true" : "false");
 
-    // ✅ ログイン時刻を DB に保存（loginTime は送らない）
-    await fetch("/record-login-time", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username })
-    });
 
-    // ✅ 遷移
-    if (result.isAdmin) {
-      window.location.href = "/admin-scores.html";
-    } else {
-      window.location.href = "/index.html";
-    }
-  });
+  window.location.href = "/index.html";
+});
 </script>
-
-
-
-
 
 </body>
 </html>

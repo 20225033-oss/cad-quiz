@@ -1,10 +1,17 @@
+// ============================
+//  全スコア一覧読み込み
+// ============================
 export function loadScores() {
-  // 全スコア
-  fetch("/get-all-scores")
+
+  // ------------------------------------------
+  // 全スコア一覧
+  // ------------------------------------------
+  fetch("/api/get-all-scores")
     .then(res => res.json())
     .then(data => {
       const tbody = document.querySelector("#scoreTable tbody");
       tbody.innerHTML = "";
+
       if (data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5">スコア履歴がありません。</td></tr>`;
         return;
@@ -13,75 +20,68 @@ export function loadScores() {
       data.forEach(score => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${score.username}</td>
+          <td>${score.user_id}</td>
           <td>${score.score}</td>
-          <td>${score.total}</td>
+          <td>${score.year_id}</td>
           <td>${new Date(score.date).toLocaleString()}</td>
           <td>
-            <button onclick="editScore('${score.date}', ${score.score}, ${score.total})">編集</button>
-            <button onclick="deleteScore('${score.date}')">削除</button>
+            <button onclick="editScore(${score.id}, ${score.score}, ${score.year_id})">編集</button>
+            <button onclick="deleteScore(${score.id})">削除</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
     });
 
+  // ------------------------------------------
   // ユーザー統計
-  fetch("/get-all-user-stats")
+  // ------------------------------------------
+  fetch("/api/get-all-user-stats")
     .then(res => res.json())
     .then(data => {
       const tbody = document.querySelector("#userStatsTable tbody");
       tbody.innerHTML = "";
+
       data.forEach(stat => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${stat.username}</td>
-          <td>${stat.avgPercent}%</td>
-          <td>${stat.maxPercent}%</td>
-          <td>${stat.attempts}</td>
+          <td>${stat.avg_score ? stat.avg_score.toFixed(1) : "-"}</td>
+          <td>${stat.play_count}</td>
         `;
         tbody.appendChild(tr);
       });
     });
 
-  // ユーザーセレクトボックス
-  fetch("/get-users")
+  // ------------------------------------------
+  // ユーザー一覧 → セレクトボックス
+  // ------------------------------------------
+  fetch("/api/get-users")
     .then(res => res.json())
     .then(users => {
       const select = document.getElementById("userSelect");
       select.innerHTML = "";
+
       users.forEach(u => {
         const opt = document.createElement("option");
-        opt.value = u.username;
+        opt.value = u.id;
         opt.textContent = u.username;
         select.appendChild(opt);
       });
     });
-
-  // イベント登録
-  document.querySelector("button[onclick='showUserScores()']").onclick = showUserScores;
 }
 
-// === 関数群 ===
-window.deleteScore = function (date) {
+
+// ============================
+//  個別スコア削除
+// ============================
+window.deleteScore = function (score_id) {
   if (!confirm("このスコアを削除しますか？")) return;
-  fetch(`/delete-score/${date}`, { method: "DELETE" })
-    .then(res => res.json())
-    .then(data => {
-      alert(data.message);
-      location.reload();
-    });
-};
 
-window.editScore = function (date, oldScore, oldTotal) {
-  const newScore = prompt("新しいスコアを入力してください:", oldScore);
-  const newTotal = prompt("新しい全問題数を入力してください:", oldTotal);
-  if (!newScore || !newTotal) return;
-
-  fetch(`/edit-score/${date}`, {
-    method: "PUT",
+  fetch("/api/delete-score", {
+    method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ newScore, newTotal })
+    body: JSON.stringify({ score_id })
   })
     .then(res => res.json())
     .then(data => {
@@ -90,11 +90,36 @@ window.editScore = function (date, oldScore, oldTotal) {
     });
 };
 
-function showUserScores() {
-  const username = document.getElementById("userSelect").value;
-  if (!username) return alert("ユーザーを選択してください。");
 
-  fetch(`/get-scores/${username}`)
+// ============================
+//  スコア編集
+// ============================
+window.editScore = function (score_id, oldScore, oldYear) {
+  const newScore = prompt("新しいスコア:", oldScore);
+  const newYear = prompt("新しい年度 (例: 201601):", oldYear);
+
+  if (!newScore || !newYear) return;
+
+  fetch(`/api/edit-score?score_id=${score_id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ newScore, newTotal: newYear })
+  })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      location.reload();
+    });
+};
+
+
+// ============================
+//  特定ユーザーのスコア一覧
+// ============================
+window.showUserScores = function () {
+  const user_id = document.getElementById("userSelect").value;
+
+  fetch(`/api/get-scores?user_id=${user_id}`)
     .then(res => res.json())
     .then(data => {
       const tbody = document.querySelector("#userScoreTable tbody");
@@ -106,15 +131,18 @@ function showUserScores() {
       }
 
       data.forEach(score => {
-        const percent = ((score.score / score.total) * 100).toFixed(1);
+        const percent = score.total
+          ? `${((score.score / score.total) * 100).toFixed(1)}%`
+          : "-";
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${new Date(score.date).toLocaleString()}</td>
           <td>${score.score}</td>
           <td>${score.total}</td>
-          <td>${percent}%</td>
+          <td>${percent}</td>
         `;
         tbody.appendChild(tr);
       });
     });
-}
+};

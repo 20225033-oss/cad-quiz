@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>結果ページ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>結果</h1>
+<div id="resultContainer"></div>
+
+<button onclick="location.href='index.html'">ホームへ戻る</button>
+<button onclick="location.href='scores.html'">スコア履歴を見る</button>
+
+<script>
+const html = localStorage.getItem("latestResultHTML");
+document.getElementById("resultContainer").innerHTML = html || "結果がありません。";
+</script>
+
+</body>
+</html>

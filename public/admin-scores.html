@@ -9,112 +9,100 @@
     th, td { border: 1px solid #aaa; padding: 8px; text-align: center; }
     th { background-color: #f2f2f2; }
     button { margin: 2px; }
-    form { margin-top: 10px; }
-    input { padding: 5px; margin-right: 5px; }
-      /* 🌈 デザイン改善エリア（追加） */
-  h1, h2 {
-    color: #333;
-    border-left: 6px solid #4CAF50;
-    padding-left: 10px;
-  }
 
-  button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 6px 12px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
+    h1, h2 {
+      color: #333;
+      border-left: 6px solid #4CAF50;
+      padding-left: 10px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover { background-color: #45a049; }
 
-  button:hover {
-    background-color: #45a049;
-  }
+    table { box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    th { background-color: #eafbea; font-weight: bold; }
 
-  table {
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  }
+    input, select {
+      border: 1px solid #aaa;
+      border-radius: 4px;
+      padding: 6px;
+    }
 
-  th {
-    background-color: #eafbea;
-    font-weight: bold;
-  }
-
-  input, select {
-    border: 1px solid #aaa;
-    border-radius: 4px;
-    padding: 6px;
-  }
-
-  hr {
-    margin: 25px 0;
-    border: 1px solid #ddd;
-  }
-
+    hr {
+      margin: 25px 0;
+      border: 1px solid #ddd;
+    }
   </style>
 </head>
 <body>
-  <h1>CAD 試験対策クイズ — 管理者用：全ユーザーのスコア一覧</h1>
-  <button onclick="location.href='index.html'">クイズへ戻る</button>
-  <button onclick="location.href='#loginTimeTable'">利用時間を見る</button>
+
+<h1>CAD 試験対策クイズ — 管理者用：全ユーザーのスコア一覧</h1>
+<button onclick="location.href='index.html'">クイズへ戻る</button>
+<button onclick="location.href='#loginTimeTable'">利用時間を見る</button>
 
 
-  <!-- ✅ ユーザー統計 -->
-  <h2>📊 ユーザー統計</h2>
-  <table id="userStatsTable">
-    <thead>
-      <tr>
-        <th>ユーザー名</th>
-        <th>平均正答率</th>
-        <th>最高正答率</th>
-        <th>受験回数</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<!-- ユーザー統計 -->
+<h2>📊 ユーザー統計</h2>
+<table id="userStatsTable">
+  <thead>
+    <tr>
+      <th>ユーザー名</th>
+      <th>平均正答率</th>
+      <th>最高正答率</th>
+      <th>受験回数</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-  <hr>
+<hr>
 
-  <!-- ✅ ユーザー管理エリア -->
-  <h2>👤 登録ユーザー管理</h2>
+<!-- ユーザー管理 -->
+<h2>👤 登録ユーザー管理</h2>
 
-  <!-- 新規ユーザー追加フォーム -->
-  <form id="addUserForm">
-    <input type="text" id="newUsername" placeholder="ユーザー名" required>
-    <input type="password" id="newPassword" placeholder="パスワード" required>
-    <button type="submit">追加</button>
-  </form>
+<form id="addUserForm">
+  <input type="text" id="newUsername" placeholder="ユーザー名" required>
+  <input type="password" id="newPassword" placeholder="パスワード" required>
+  <button type="submit">追加</button>
+</form>
 
-  <!-- ユーザー一覧 -->
-  <table id="userTable">
-    <thead>
-      <tr>
-        <th>ユーザー名</th>
-        <th>操作</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<table id="userTable">
+  <thead>
+    <tr>
+      <th>ユーザー名</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-  <hr>
+<hr>
 
-  <!-- ✅ スコア一覧 -->
-  <h2>🧾 全スコア履歴</h2>
-  <table id="scoreTable">
-    <thead>
-      <tr>
-        <th>ユーザー名</th>
-        <th>スコア</th>
-        <th>全問題数</th>
-        <th>日付</th>
-        <th>操作</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<!-- 全スコア履歴 -->
+<h2>🧾 全スコア履歴</h2>
+<table id="scoreTable">
+  <thead>
+    <tr>
+      <th>ユーザー名</th>
+      <th>スコア</th>
+      <th>全問題数</th>
+      <th>日付</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-  <hr>
+<hr>
+
+<!-- ユーザー別スコア -->
 <h2>👤 ユーザー別スコア履歴</h2>
 <p>ユーザーを選択：</p>
 <select id="userSelect"></select>
@@ -133,6 +121,8 @@
 </table>
 
 <hr>
+
+<!-- ログイン履歴 -->
 <h2>🕒 ユーザー最終ログイン時刻</h2>
 <table id="loginTimeTable">
   <thead>
@@ -144,6 +134,9 @@
   <tbody></tbody>
 </table>
 
+
+<!-- 重要：読み込み順を修正 -->
+<script type="module" src="js/admin-scores.js"></script>
 <script type="module" src="js/admin-main.js"></script>
 
 </body>
