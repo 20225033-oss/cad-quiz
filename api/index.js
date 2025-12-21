@@ -26,11 +26,11 @@ export default async function handler(req, res) {
         `
         INSERT INTO scores
         (user_id, year_id, score, total, percent,
-         correct_cat1, total_cat1,
-         correct_cat2, total_cat2,
-         correct_cat3, total_cat3,
-         correct_cat4, total_cat4,
-         pass)
+          correct_cat1, total_cat1,
+          correct_cat2, total_cat2,
+          correct_cat3, total_cat3,
+          correct_cat4, total_cat4,
+          pass)
         VALUES
         ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
         `,
@@ -40,17 +40,14 @@ export default async function handler(req, res) {
           body.score,
           body.total,
           body.percent,
-          body.correct_cat1,
-          body.total_cat1,
-          body.correct_cat2,
-          body.total_cat2,
-          body.correct_cat3,
-          body.total_cat3,
-          body.correct_cat4,
-          body.total_cat4,
+          0, 15,   // cat1
+          0, 15,   // cat2
+          0, 15,   // cat3
+          0, 15,   // cat4
           body.pass,
         ]
       );
+
 
       return send(res, 200, { message: "Score saved" });
     } catch (e) {
