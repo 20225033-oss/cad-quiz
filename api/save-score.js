@@ -36,7 +36,11 @@ export default async function handler(req, res) {
 
     const sql = `
     INSERT INTO scores (
-        user_id, year_id, score, total, percent,
+        user_id,
+        year_id,
+        score,
+        total,
+        percent,
         correct_cat1, total_cat1,
         correct_cat2, total_cat2,
         correct_cat3, total_cat3,
@@ -56,12 +60,13 @@ export default async function handler(req, res) {
         score,
         total,
         percent,
-        0, 15,
-        0, 15,
-        0, 15,
-        0, 15,
-        !!pass
+        0, 15,   // cat1
+        0, 15,   // cat2
+        0, 15,   // cat3
+        0, 15,   // cat4
+        !!pass,
     ]);
+
 
 
 
